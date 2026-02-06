@@ -7,6 +7,42 @@ Collection of scripts to help with Android ROM stuff.
 **Setup**:  
 `chmod +x setup.sh`  
 `sudo bash setup.sh`
+
+## GitHub Actions workflow (tree generation on runners)
+This repo includes a workflow you can run in GitHub Actions or on a self-hosted runner to generate device trees, vendor trees, or any other supported output. The workflow lets anyone trigger a run with the same scripts used locally and then download the produced artifacts.  
+
+### How it works
+- The workflow installs dependencies via `setup.sh`.  
+- It optionally downloads an input URL (ROM dump, OTA, etc.).  
+- It runs the selected tool with your arguments.  
+- It uploads the output paths as an artifact.  
+
+### Run in GitHub Actions (hosted runner)
+1. Fork this repo and open the **Actions** tab.  
+2. Select **android-tools** → **Run workflow**.  
+3. Choose the tool, fill the arguments, and (optionally) provide an input URL.  
+4. After the run finishes, download the artifact from the workflow summary.  
+
+### Run on a self-hosted runner (local machine)
+You can also attach your own runner and use the same workflow to process large dumps locally while keeping the GitHub Actions UI.  
+1. Add a self-hosted runner to your fork (GitHub → Settings → Actions → Runners).  
+2. Update the workflow `runs-on` to your self-hosted runner labels if desired.  
+3. Trigger the workflow the same way as above.  
+
+### Example workflows
+**Example: create a dummy device/vendor tree from a local dump**  
+- **tool**: `dummy_dt.sh`  
+- **args**: `/path/to/rom_dump`  
+- **upload_paths**: `working`  
+
+**Example: create a vendor tree from a dump URL**  
+- **input_url**: `https://example.com/path/to/dump.zip`  
+- **input_path**: `working/dump.zip`  
+- **tool**: `vendor_tree.sh`  
+- **args**: `working/dump.zip`  
+- **upload_paths**: `working`  
+
+These examples mirror the local scripts while making them runnable in GitHub Actions runners for anyone on your team.  
   
 1. **blobs_downloader.sh**: A script to download selected blobs from [AndroidBlobs](https://github.com/AndroidBlobs) etc repo. [Example](https://del.dog/olohilylon.txt).  
 Usage: `./tools/blobs_downloader.sh <raw dump repo URL> <path to proprietary-files.txt>`
