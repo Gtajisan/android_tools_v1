@@ -1,0 +1,78 @@
+name: android-tools
+
+on:
+  workflow_dispatch:
+    inputs:
+      tool:
+        description: "Tool script to run (from tools/)."
+        type: choice
+        options:
+          - blobs_downloader.sh
+          - common_blobs.sh
+          - common_props.sh
+          - deltaota.sh
+          - dt_repos.sh
+          - dummy_dt.sh
+          - dump_push.sh
+          - proprietary-files.sh
+          - rebase_kernel.sh
+          - rom_compare.sh
+          - rom_extract.sh
+          - rootdir.sh
+          - system_vendor_prop.sh
+          - vendor_prop.sh
+          - vendor_tree.sh
+        required: true
+      args:
+        description: "Arguments passed to the script. Example: '<path-or-url> <path-to-proprietary-files.txt>'"
+        required: false
+        default: ""
+      input_url:
+        description: "Optional URL to download before running the tool."
+        required: false
+        default: ""
+      input_path:
+        description: "Where to save input_url (default: working/input)."
+        required: false
+        default: "working/input"
+      upload_paths:
+        description: "Space-separated paths to upload as an artifact."
+        required: false
+        default: "working"
+      artifact_name:
+        description: "Artifact name for uploaded outputs."
+        required: false
+        default: "android-tools-output"
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          chmod +x setup.sh
+          sudo bash setup.sh
+
+      - name: Download optional input
+        if: ${{ inputs.input_url != '' }}
+        run: |
+          mkdir -p "$(dirname "${{ inputs.input_path }}")"
+          curl -L "${{ inputs.input_url }}" -o "${{ inputs.input_path }}"
+
+      - name: Run tool
+        shell: bash
+        run: |
+          chmod +x "tools/${{ inputs.tool }}"
+          ./tools/${{ inputs.tool }} ${{ inputs.args }}
+
+      - name: Upload outputs
+        if: ${{ inputs.upload_paths != '' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ inputs.artifact_name }}
+          path: ${{ inputs.upload_paths }}
